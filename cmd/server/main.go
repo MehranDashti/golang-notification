@@ -8,7 +8,7 @@ import (
 
 	"notification/internal/config"
 	"notification/internal/database"
-	"notification/internal/handler"
+	rest_handler "notification/internal/handler/rest"
 	"notification/internal/router"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	)
 
 	//Handlers
-	healthHandler := handler.NewHealthHandler(db)
+	healthHandler := rest_handler.NewHealthHandler(db)
 
 	r := router.Setup(
 		healthHandler,

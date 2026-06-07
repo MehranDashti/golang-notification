@@ -1,13 +1,13 @@
 package router
 
 import (
-	"notification/internal/handler"
+	rest_handler "notification/internal/handler/rest"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Setup(
-	healthHandler *handler.HealthHandler,
+	healthHandler *rest_handler.HealthHandler,
 ) *gin.Engine {
 	r := gin.New()
 
