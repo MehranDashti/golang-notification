@@ -52,11 +52,11 @@ func Load() *Config {
 func (c *Config) Validate() error {
 	var missing []string
 
-	if c.Port == "" {
+	if os.Getenv("APP_PORT") == "" {
 		missing = append(missing, "APP_PORT")
 	}
-	if c.DSN == "" {
-		missing = append(missing, "DB_USER/DB_PASS/DB_HOST/DB_PORT/DB_NAME")
+	if os.Getenv("DB_HOST") == "" {
+		missing = append(missing, "DB_HOST")
 	}
 
 	if len(missing) > 0 {
