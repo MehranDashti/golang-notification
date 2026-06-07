@@ -1,0 +1,52 @@
+package main
+
+import (
+	"log/slog"
+	"net/http"
+	"os"
+	"time"
+
+	"notification/internal/config"
+	"notification/internal/database"
+	"notification/internal/handler"
+	"notification/internal/router"
+)
+
+func main() {
+	cfg := config.Load()
+	if err := cfg.Validate(); err != nil {
+		slog.Error("invalid configuration", "error", err)
+		os.Exit(1)
+	}
+
+	db := database.Connect(cfg.DSN)
+
+	slog.Info("server starting",
+		"port", cfg.Port,
+	)
+
+	//Handlers
+	healthHandler := handler.NewHealthHandler(db)
+
+	r := router.Setup(
+		healthHandler,
+	)
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: r,
+		// Timeouts — protect against slow clients
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	go func() {
+		slog.Info("server starting", "port", cfg.Port)
+		if err := srv.ListenAndServe(); err != nil &&
+			err != http.ErrServerClosed {
+			slog.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}()
+}
