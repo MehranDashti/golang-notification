@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"notification/internal/domain/notification"
 	"notification/internal/dto"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -55,11 +54,9 @@ func (h *NotificationHandler) GetByID(c *gin.Context) {
 
 func (h *NotificationHandler) ListByUser(c *gin.Context) {
 	userId := c.Param("user_id")
+	q := dto.ParsePagination(c)
 
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
-	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
-
-	notifications, err := h.service.ListByUser(c.Request.Context(), userId, limit, offset)
+	notifications, total, err := h.service.ListByUser(c.Request.Context(), userId, q.Limit, q.Offset)
 	if err != nil {
 		_ = c.Error(err)
 		return
@@ -70,12 +67,7 @@ func (h *NotificationHandler) ListByUser(c *gin.Context) {
 		resp[i] = toResponse(n)
 	}
 
-	dto.RespondSuccess(c, http.StatusOK, "Notification Sent", dto.PaginationResponse{
-		List:   resp,
-		Total:  len(resp),
-		Limit:  limit,
-		Offset: offset,
-	})
+	dto.RespondSuccess(c, http.StatusOK, "Notification Sent", dto.NewPaginationResponse(resp, total, q))
 }
 
 func toResponse(n *notification.Notification) *dto.NotificationResponse {

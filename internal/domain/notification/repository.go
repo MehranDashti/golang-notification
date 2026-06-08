@@ -91,3 +91,7 @@ func (r *NotificationRepository) UpdateStatus(ctx context.Context, id string, st
 
 	return err
 }
+
+func (r *NotificationRepository) CountByUserId(ctx context.Context, userId string) (int64, error) {
+	return r.col.CountDocuments(ctx, bson.M{"user_id": userId})
+}

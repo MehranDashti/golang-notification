@@ -4,13 +4,6 @@ import (
 	"time"
 )
 
-type PaginationResponse struct {
-	List   interface{} `json:"list"`
-	Total  int         `json:"total"`
-	Limit  int         `json:"limit"`
-	Offset int         `json:"offset"`
-}
-
 type NotificationResponse struct {
 	ID        string            `json:"id"`
 	UserID    string            `json:"user_id"`

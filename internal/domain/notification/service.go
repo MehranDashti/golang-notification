@@ -44,13 +44,17 @@ func (s *NotificationService) GetById(ctx context.Context, id string) (*Notifica
 	return n, nil
 }
 
-func (s *NotificationService) ListByUser(ctx context.Context, userId string, limit int, offset int) ([]*Notification, error) {
+func (s *NotificationService) ListByUser(ctx context.Context, userId string, limit int, offset int) ([]*Notification, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
+	total, err := s.repo.CountByUserId(ctx, userId)
+	if err != nil {
+		return nil, 0, apperror.InternalWithDetails("Cannot count notifications: ", err)
+	}
 	notifications, err := s.repo.FindByUserId(ctx, userId, limit, offset)
 	if err != nil {
-		return nil, apperror.InternalWithDetails("Can not get notifications by id: ", err)
+		return nil, 0, apperror.InternalWithDetails("Can not get notifications by id: ", err)
 	}
-	return notifications, nil
+	return notifications, total, nil
 }
