@@ -45,13 +45,13 @@ func Load() *Config {
 func (c *Config) Validate() error {
 	var missing []string
 
-	if os.Getenv("APP_PORT") == "" {
+	if c.Port == "" {
 		missing = append(missing, "APP_PORT")
 	}
-	if os.Getenv("MONGO_URI") == "" {
+	if c.MongoURI == "" {
 		missing = append(missing, "MONGO_URI")
 	}
-	if os.Getenv("MONGO_DATABASE") == "" {
+	if c.MongoDatabase == "" {
 		missing = append(missing, "MONGO_DATABASE")
 	}
 
