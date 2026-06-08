@@ -3,7 +3,7 @@ package notification
 import (
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Channel string
@@ -16,22 +16,22 @@ const (
 )
 
 const (
-	StatusPending     Status = "pending"
-	StatusProccessing Status = "proccessing"
-	StatusSent        Status = "sent"
-	StatusFailed      Status = "failed"
+	StatusPending    Status = "pending"
+	StatusProcessing Status = "processing"
+	StatusSent       Status = "sent"
+	StatusFailed     Status = "failed"
 )
 
 type Notification struct {
-	Id        primitive.ObjectID `bson:"_id,omitempty"`
-	UserId    string             `bson:"user_id"`
-	Channel   Channel            `bson:"channel"`
-	Status    Status             `bson:"status"`
-	Title     string             `bson:"string"`
-	Body      string             `bson:"body"`
-	Metadata  map[string]string  `bson:"meta_title"`
-	Error     string             `bson:"error"`
-	SentAt    *time.Time         `bson:"sent_at"`
-	CreatedAt time.Time          `bson:"created_at"`
-	UpdatedAt time.Time          `bson:"updated_at"`
+	Id        bson.ObjectID     `bson:"_id,omitempty"`
+	UserId    string            `bson:"user_id"`
+	Channel   Channel           `bson:"channel"`
+	Status    Status            `bson:"status"`
+	Title     string            `bson:"title"`
+	Body      string            `bson:"body"`
+	Metadata  map[string]string `bson:"metadata"`
+	Error     string            `bson:"error"`
+	SentAt    *time.Time        `bson:"sent_at"`
+	CreatedAt time.Time         `bson:"created_at"`
+	UpdatedAt time.Time         `bson:"updated_at"`
 }

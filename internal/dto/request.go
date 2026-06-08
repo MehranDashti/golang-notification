@@ -5,5 +5,5 @@ type CreateNotificationRequest struct {
 	Channel  string            `json:"channel" binding:"required"`
 	Title    string            `json:"title" binding:"required"`
 	Body     string            `json:"body" binding:"required"`
-	Metadata map[string]string `json:"meta_title"`
+	Metadata map[string]string `json:"metadata"`
 }
