@@ -28,10 +28,6 @@ func main() {
 	mongoClient := database.Connect(cfg.MongoURI)
 	db := mongoClient.Database(cfg.MongoDatabase)
 
-	slog.Info("server starting",
-		"port", cfg.Port,
-	)
-
 	// Notification
 	notifRepo := notification.NewNotificationRepository(db)
 	notifService := notification.NewNotificationService(notifRepo)

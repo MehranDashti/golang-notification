@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"net/http"
+	"notification/internal/dto"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,16 +23,9 @@ func (h *HealthHandler) Check(c *gin.Context) {
 	defer cancel()
 
 	if err := h.db.Ping(ctx, nil); err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "error",
-			"db":     "ping failed: " + err.Error(),
-		})
+		dto.RespondError(c, http.StatusServiceUnavailable, "db ping failed", err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "ok",
-		"db":      "ok",
-		"version": "1.0.0",
-	})
+	dto.RespondSuccess(c, http.StatusOK, "ok", gin.H{"db": "ok", "version": "1.0.0"})
 }
