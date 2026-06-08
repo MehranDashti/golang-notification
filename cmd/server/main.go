@@ -10,6 +10,7 @@ import (
 
 	"notification/internal/config"
 	"notification/internal/database"
+	"notification/internal/domain/notification"
 	rest_handler "notification/internal/handler/rest"
 	"notification/internal/router"
 )
@@ -21,17 +22,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	db := database.Connect(cfg.MongoURI)
+	mongoClient := database.Connect(cfg.MongoURI)
+	db := mongoClient.Database(cfg.MongoDatabase)
 
 	slog.Info("server starting",
 		"port", cfg.Port,
 	)
 
-	//Handlers
-	healthHandler := rest_handler.NewHealthHandler(db)
+	// Notification
+	NotificationRepository := notification.NewNotificationRepository(db)
+	NotificationService := notification.NewNotificationService(NotificationRepository)
+	notificationHandler := rest_handler.NewNotificationHandler(NotificationService)
+
+	// Health
+	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
 	r := router.Setup(
 		healthHandler,
+		notificationHandler,
 	)
 
 	srv := &http.Server{
