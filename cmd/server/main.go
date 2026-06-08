@@ -21,7 +21,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	db := database.Connect(cfg.DSN)
+	db := database.Connect(cfg.MongoURI)
 
 	slog.Info("server starting",
 		"port", cfg.Port,

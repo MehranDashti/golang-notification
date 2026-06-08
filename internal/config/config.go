@@ -13,7 +13,8 @@ type Config struct {
 	Port          string
 	ENV           string
 	Host          string
-	DSN           string
+	MongoURI      string
+	MongoDatabase string
 	RedisAddr     string
 	RedisPassword string
 	RedisDB       int
@@ -22,15 +23,6 @@ type Config struct {
 
 func Load() *Config {
 	_ = godotenv.Load()
-
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASS"),
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_NAME"),
-	)
 
 	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
 	if err != nil {
@@ -41,7 +33,8 @@ func Load() *Config {
 		Port:          os.Getenv("APP_PORT"),
 		ENV:           os.Getenv("APP_ENV"),
 		Host:          os.Getenv("APP_HOST"),
-		DSN:           dsn,
+		MongoURI:      os.Getenv("MONGO_URI"),
+		MongoDatabase: os.Getenv("MONGO_DATABASE"),
 		RedisAddr:     os.Getenv("REDIS_ADDR"),
 		RedisPassword: os.Getenv("REDIS_PASSWORD"),
 		RedisDB:       redisDB,
@@ -55,8 +48,11 @@ func (c *Config) Validate() error {
 	if os.Getenv("APP_PORT") == "" {
 		missing = append(missing, "APP_PORT")
 	}
-	if os.Getenv("DB_HOST") == "" {
-		missing = append(missing, "DB_HOST")
+	if os.Getenv("MONGO_URI") == "" {
+		missing = append(missing, "MONGO_URI")
+	}
+	if os.Getenv("MONGO_DATABASE") == "" {
+		missing = append(missing, "MONGO_DATABASE")
 	}
 
 	if len(missing) > 0 {

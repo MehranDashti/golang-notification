@@ -1,32 +1,27 @@
 package rest
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type HealthHandler struct {
-	db *gorm.DB
+	db *mongo.Client
 }
 
-func NewHealthHandler(db *gorm.DB) *HealthHandler {
+func NewHealthHandler(db *mongo.Client) *HealthHandler {
 	return &HealthHandler{db: db}
 }
 
 func (h *HealthHandler) Check(c *gin.Context) {
-	// Check DB connectivity
-	sqlDB, err := h.db.DB()
-	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "error",
-			"db":     "cannot get sql.DB: " + err.Error(),
-		})
-		return
-	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+	defer cancel()
 
-	if err := sqlDB.PingContext(c.Request.Context()); err != nil {
+	if err := h.db.Ping(ctx, nil); err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"status": "error",
 			"db":     "ping failed: " + err.Error(),
