@@ -9,7 +9,7 @@ import (
 type AppError struct {
 	Code    int
 	Message string
-	Details interface{}
+	Details any
 	Err     error
 }
 
@@ -42,7 +42,7 @@ func BadRequest(message string) *AppError {
 	return &AppError{Code: http.StatusBadRequest, Message: message}
 }
 
-func BadRequestWithDetails(message string, details interface{}) *AppError {
+func BadRequestWithDetails(message string, details any) *AppError {
 	return &AppError{
 		Code:    http.StatusBadRequest,
 		Message: message,
