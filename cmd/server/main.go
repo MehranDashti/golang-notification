@@ -30,16 +30,16 @@ func main() {
 	)
 
 	// Notification
-	NotificationRepository := notification.NewNotificationRepository(db)
-	NotificationService := notification.NewNotificationService(NotificationRepository)
-	notificationHandler := rest_handler.NewNotificationHandler(NotificationService)
+	notifRepo := notification.NewNotificationRepository(db)
+	notifService := notification.NewNotificationService(notifRepo)
+	notifHandler := rest_handler.NewNotificationHandler(notifService)
 
 	// Health
 	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
 	r := router.Setup(
 		healthHandler,
-		notificationHandler,
+		notifHandler,
 	)
 
 	srv := &http.Server{

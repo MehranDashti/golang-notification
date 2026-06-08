@@ -2,9 +2,12 @@ package notification
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"notification/internal/apperror"
+
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type NotificationService struct {
@@ -21,7 +24,7 @@ func (s *NotificationService) Create(ctx context.Context, n *Notification) error
 		return apperror.InternalWithDetails("Can not Create Notification: ", err)
 	}
 
-	err := s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusProccessing, "")
+	err := s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusProcessing, "")
 	if err != nil {
 		return apperror.InternalWithDetails("Can not Update Notification Status: ", err)
 	}
@@ -33,7 +36,10 @@ func (s *NotificationService) Create(ctx context.Context, n *Notification) error
 func (s *NotificationService) GetById(ctx context.Context, id string) (*Notification, error) {
 	n, err := s.repo.FindByID(ctx, id)
 	if err != nil {
-		return nil, apperror.InternalWithDetails("Can not find notification: ", err)
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, apperror.NotFound("notification not found")
+		}
+		return nil, apperror.InternalWithDetails("cannot find notification", err)
 	}
 	return n, nil
 }

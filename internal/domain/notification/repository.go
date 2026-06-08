@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -22,7 +21,7 @@ func NewNotificationRepository(db *mongo.Database) *NotificationRepository {
 }
 
 func (r *NotificationRepository) Create(ctx context.Context, n *Notification) error {
-	n.Id = primitive.NewObjectID()
+	n.Id = bson.NewObjectID()
 	n.CreatedAt = time.Now()
 	n.UpdatedAt = time.Now()
 	n.Status = StatusPending
@@ -33,7 +32,7 @@ func (r *NotificationRepository) Create(ctx context.Context, n *Notification) er
 }
 
 func (r *NotificationRepository) FindByID(ctx context.Context, id string) (*Notification, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
+	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +71,7 @@ func (r *NotificationRepository) FindByUserId(ctx context.Context, userId string
 }
 
 func (r *NotificationRepository) UpdateStatus(ctx context.Context, id string, status Status, errMsg string) error {
-	oid, err := primitive.ObjectIDFromHex(id)
+	oid, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
