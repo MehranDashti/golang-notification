@@ -26,6 +26,7 @@ func main() {
 	}
 
 	mongoClient := database.Connect(cfg.MongoURI)
+	database.Migrate(mongoClient, cfg.MongoDatabase)
 	db := mongoClient.Database(cfg.MongoDatabase)
 
 	// Notification
