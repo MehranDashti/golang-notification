@@ -16,7 +16,9 @@ type QueryOption func(*QueryOptions)
 
 func WithFilter(filter bson.M) QueryOption {
 	return func(q *QueryOptions) {
-		q.Filter = filter
+		for k, v := range filter {
+			q.Filter[k] = v
+		}
 	}
 }
 
