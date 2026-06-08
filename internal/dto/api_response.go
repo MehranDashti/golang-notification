@@ -12,7 +12,7 @@ type APIResponse struct {
 	Error   any    `json:"error,omitempty"`
 }
 
-func RespondSuccess(c *gin.Context, code int, message string, data interface{}) {
+func RespondSuccess(c *gin.Context, code int, message string, data any) {
 	c.JSON(code, APIResponse{
 		Success: true,
 		Code:    code,
@@ -21,7 +21,7 @@ func RespondSuccess(c *gin.Context, code int, message string, data interface{}) 
 	})
 }
 
-func ResponseError(c *gin.Context, code int, message string, details interface{}) {
+func RespondError(c *gin.Context, code int, message string, details any) {
 	c.JSON(code, APIResponse{
 		Success: false,
 		Code:    code,

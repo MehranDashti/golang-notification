@@ -29,7 +29,7 @@ func ErrorHandler() gin.HandlerFunc {
 					"error", appErr.Err,
 				)
 			}
-			dto.ResponseError(c, appErr.Code, appErr.Message, appErr.Details)
+			dto.RespondError(c, appErr.Code, appErr.Message, appErr.Details)
 			return
 		}
 		slog.Error("unhandled error — not an AppError",
@@ -37,11 +37,11 @@ func ErrorHandler() gin.HandlerFunc {
 			"path", c.Request.URL.Path,
 			"error", err,
 		)
-		dto.ResponseError(
+		dto.RespondError(
 			c,
 			http.StatusInternalServerError,
 			"internal server error",
-			appErr.Details,
+			nil,
 		)
 	}
 }
