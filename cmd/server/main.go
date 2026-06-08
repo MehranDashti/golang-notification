@@ -13,10 +13,12 @@ import (
 	"notification/internal/domain/notification"
 	rest_handler "notification/internal/handler/rest"
 	"notification/internal/router"
+	"notification/pkg/logger"
 )
 
 func main() {
 	cfg := config.Load()
+	logger.SetUp(cfg.ENV, cfg.LogLevel)
 	if err := cfg.Validate(); err != nil {
 		slog.Error("invalid configuration", "error", err)
 		os.Exit(1)
