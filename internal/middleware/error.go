@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"notification/internal/apperror"
+	"notification/internal/dto"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,13 +29,7 @@ func ErrorHandler() gin.HandlerFunc {
 					"error", appErr.Err,
 				)
 			}
-
-			c.JSON(appErr.Code, gin.H{
-				"success": false,
-				"code":    appErr.Code,
-				"message": appErr.Message,
-				"error":   appErr.Details,
-			})
+			dto.ResponseError(c, appErr.Code, appErr.Message, appErr.Details)
 			return
 		}
 		slog.Error("unhandled error — not an AppError",
@@ -42,11 +37,11 @@ func ErrorHandler() gin.HandlerFunc {
 			"path", c.Request.URL.Path,
 			"error", err,
 		)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"code":    http.StatusInternalServerError,
-			"message": "internal server error",
-			"error":   nil,
-		})
+		dto.ResponseError(
+			c,
+			http.StatusInternalServerError,
+			"internal server error",
+			appErr.Details,
+		)
 	}
 }

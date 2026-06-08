@@ -70,8 +70,12 @@ func (h *NotificationHandler) ListByUser(c *gin.Context) {
 		resp[i] = toResponse(n)
 	}
 
-	dto.RespondSuccess(c, http.StatusOK,
-		"Notification Sent", resp)
+	dto.RespondSuccess(c, http.StatusOK, "Notification Sent", dto.PaginationResponse{
+		List:   resp,
+		Total:  len(resp),
+		Limit:  limit,
+		Offset: offset,
+	})
 }
 
 func toResponse(n *notification.Notification) *dto.NotificationResponse {
