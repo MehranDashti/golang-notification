@@ -7,6 +7,9 @@ import (
 
 	"notification/internal/apperror"
 
+	base "notification/internal/repository/mongo"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -19,7 +22,7 @@ func NewNotificationService(repo *NotificationRepository) *NotificationService {
 }
 
 func (s *NotificationService) Create(ctx context.Context, n *Notification) error {
-	if err := s.repo.Create(ctx, n); err != nil {
+	if err := s.repo.Insert(ctx, n); err != nil {
 		slog.Warn("Error for Create Notification")
 		return apperror.InternalWithDetails("Can not Create Notification: ", err)
 	}
@@ -48,11 +51,16 @@ func (s *NotificationService) ListByUser(ctx context.Context, userId string, lim
 	if limit <= 0 || limit > 100 {
 		limit = 20
 	}
-	total, err := s.repo.CountByUserId(ctx, userId)
+	total, err := s.repo.Count(ctx, base.WithFilter(bson.M{"user_id": userId}))
 	if err != nil {
 		return nil, 0, apperror.InternalWithDetails("Cannot count notifications: ", err)
 	}
-	notifications, err := s.repo.FindByUserId(ctx, userId, limit, offset)
+	notifications, err := s.repo.FindAll(ctx,
+		base.WithFilter(bson.M{"user_id": userId}),
+		base.WithSort("created_at", false),
+		base.WithLimit(limit),
+		base.WithOffset(offset),
+	)
 	if err != nil {
 		return nil, 0, apperror.InternalWithDetails("Can not get notifications by id: ", err)
 	}

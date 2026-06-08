@@ -35,3 +35,16 @@ type Notification struct {
 	CreatedAt time.Time         `bson:"created_at"`
 	UpdatedAt time.Time         `bson:"updated_at"`
 }
+
+func (n *Notification) GetID() bson.ObjectID {
+	return n.Id
+}
+
+func (n *Notification) SetID(id bson.ObjectID) {
+	n.Id = id
+}
+
+func (n *Notification) SetTimestamnps(createdAt, updatedAt time.Time) {
+	n.CreatedAt = createdAt
+	n.UpdatedAt = updatedAt
+}
