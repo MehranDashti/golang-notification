@@ -12,7 +12,7 @@ import (
 type Document interface {
 	GetID() bson.ObjectID
 	SetID(id bson.ObjectID)
-	SetTimestamnps(createdAt time.Time, updatedAt time.Time)
+	SetTimestamps(createdAt time.Time, updatedAt time.Time)
 }
 
 type BaseRepository[T Document] struct {
@@ -26,7 +26,7 @@ func NewBaseRepository[T Document](db *mongo.Database, collectionName string) *B
 func (r *BaseRepository[T]) Insert(ctx context.Context, doc T) error {
 	doc.SetID(bson.NewObjectID())
 	now := time.Now()
-	doc.SetTimestamnps(now, now)
+	doc.SetTimestamps(now, now)
 
 	_, err := r.col.InsertOne(ctx, doc)
 	return err

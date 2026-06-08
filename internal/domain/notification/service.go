@@ -3,7 +3,6 @@ package notification
 import (
 	"context"
 	"errors"
-	"log/slog"
 
 	"notification/internal/apperror"
 
@@ -23,8 +22,7 @@ func NewNotificationService(repo *NotificationRepository) *NotificationService {
 
 func (s *NotificationService) Create(ctx context.Context, n *Notification) error {
 	if err := s.repo.Insert(ctx, n); err != nil {
-		slog.Warn("Error for Create Notification")
-		return apperror.InternalWithDetails("Can not Create Notification: ", err)
+		return apperror.InternalWithDetails("cannot create notification", err)
 	}
 
 	err := s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusProcessing, "")

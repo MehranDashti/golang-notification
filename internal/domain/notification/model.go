@@ -44,7 +44,7 @@ func (n *Notification) SetID(id bson.ObjectID) {
 	n.Id = id
 }
 
-func (n *Notification) SetTimestamnps(createdAt, updatedAt time.Time) {
+func (n *Notification) SetTimestamps(createdAt, updatedAt time.Time) {
 	n.CreatedAt = createdAt
 	n.UpdatedAt = updatedAt
 }
