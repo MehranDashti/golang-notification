@@ -37,6 +37,18 @@ func main() {
 	// Health
 	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
+	// provider domain
+	// providerRepo := providerconfig.NewProviderConfigRepository(db)
+	// providerSvc := providerconfig.NewProviderConfigService(providerRepo)
+
+	// dispatchers — each loads active config from DB at send time
+	// smsDispatcher := sms.NewDispatcher(providerSvc)
+	// emailDispatcher := email.NewDispatcher(providerSvc)
+	// pushDispatcher := push.NewDispatcher(providerSvc)
+
+	// notification service gets all three
+	// notifService := notification.NewNotificationService(notifRepo, smsDispatcher, emailDispatcher, pushDispatcher)
+
 	r := router.Setup(
 		healthHandler,
 		notifHandler,
