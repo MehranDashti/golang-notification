@@ -12,6 +12,7 @@ import (
 	"notification/internal/config"
 	"notification/internal/database"
 	"notification/internal/domain/notification"
+	providerDomain "notification/internal/domain/provider"
 	rest_handler "notification/internal/handler/rest"
 	"notification/internal/router"
 	"notification/pkg/logger"
@@ -38,8 +39,9 @@ func main() {
 	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
 	// provider domain
-	// providerRepo := providerconfig.NewProviderConfigRepository(db)
-	// providerSvc := providerconfig.NewProviderConfigService(providerRepo)
+	providerRepo := providerDomain.NewProviderConfigRepository(db)
+	providerService := providerDomain.NewProviderConfigService(providerRepo)
+	providerHandler := rest_handler.NewProviderHandler(providerService)
 
 	// dispatchers — each loads active config from DB at send time
 	// smsDispatcher := sms.NewDispatcher(providerSvc)
@@ -52,6 +54,7 @@ func main() {
 	r := router.Setup(
 		healthHandler,
 		notifHandler,
+		providerHandler,
 	)
 
 	srv := &http.Server{

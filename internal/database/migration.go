@@ -18,6 +18,7 @@ func Migrate(client *mongo.Client, dbName string) {
 
 	runners := []migrations.Migration{
 		migrations.NotificationMigration{},
+		migrations.ProviderMigration{},
 	}
 
 	for _, m := range runners {

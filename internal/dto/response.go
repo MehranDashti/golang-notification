@@ -15,3 +15,13 @@ type NotificationResponse struct {
 	SentAt    *time.Time        `json:"sent_at,omitempty"`
 	CreatedAt time.Time         `json:"created_at"`
 }
+
+type ProviderConfigResponse struct {
+	ID          string            `json:"id"`
+	Channel     string            `json:"channel"`
+	Provider    string            `json:"provider"`
+	Credentials map[string]string `json:"credentials"`
+	IsActive    bool              `json:"is_active"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+}
