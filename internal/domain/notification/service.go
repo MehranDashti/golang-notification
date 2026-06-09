@@ -3,8 +3,10 @@ package notification
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"notification/internal/apperror"
+	"notification/internal/provider"
 
 	base "notification/internal/repository/mongo"
 
@@ -12,12 +14,17 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-type NotificationService struct {
-	repo *NotificationRepository
+type Dispatcher interface {
+	Send(ctx context.Context, msg provider.Message) (*provider.Result, error)
 }
 
-func NewNotificationService(repo *NotificationRepository) *NotificationService {
-	return &NotificationService{repo: repo}
+type NotificationService struct {
+	repo        *NotificationRepository
+	dispatchers map[Channel]Dispatcher
+}
+
+func NewNotificationService(repo *NotificationRepository, dispatchers map[Channel]Dispatcher) *NotificationService {
+	return &NotificationService{repo: repo, dispatchers: dispatchers}
 }
 
 func (s *NotificationService) Create(ctx context.Context, n *Notification) error {
@@ -29,9 +36,30 @@ func (s *NotificationService) Create(ctx context.Context, n *Notification) error
 	if err != nil {
 		return apperror.InternalWithDetails("Can not Update Notification Status: ", err)
 	}
-	//TODO: Dispatch notification to channels
 
-	return nil
+	dispatcher, ok := s.dispatchers[n.Channel]
+	if !ok {
+		_ = s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusFailed, "no dispatcher for this pannel exists")
+		return apperror.BadRequest("unsupported channel: " + string(n.Channel))
+	}
+	result, err := dispatcher.Send(ctx, provider.Message{
+		To:       n.Metadata["to"],
+		Title:    n.Title,
+		Body:     n.Body,
+		Metadata: n.Metadata,
+	})
+	if err != nil {
+		_ = s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusFailed, err.Error())
+		return apperror.InternalWithDetails("dispatch failed", err)
+	}
+	slog.Info("notification dispatched",
+		"channel", n.Channel,
+		"provider", result.Provider,
+		"provider_id", result.ProviderID,
+		"notification_id", n.Id.Hex(),
+	)
+
+	return s.repo.UpdateStatus(ctx, n.Id.Hex(), StatusSent, "")
 }
 
 func (s *NotificationService) GetById(ctx context.Context, id string) (*Notification, error) {

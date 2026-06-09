@@ -14,6 +14,9 @@ import (
 	"notification/internal/domain/notification"
 	providerDomain "notification/internal/domain/provider"
 	rest_handler "notification/internal/handler/rest"
+	"notification/internal/provider/email"
+	"notification/internal/provider/push"
+	"notification/internal/provider/sms"
 	"notification/internal/router"
 	"notification/pkg/logger"
 )
@@ -30,11 +33,6 @@ func main() {
 	database.Migrate(mongoClient, cfg.MongoDatabase)
 	db := mongoClient.Database(cfg.MongoDatabase)
 
-	// Notification
-	notifRepo := notification.NewNotificationRepository(db)
-	notifService := notification.NewNotificationService(notifRepo)
-	notifHandler := rest_handler.NewNotificationHandler(notifService)
-
 	// Health
 	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
@@ -43,13 +41,19 @@ func main() {
 	providerService := providerDomain.NewProviderConfigService(providerRepo)
 	providerHandler := rest_handler.NewProviderHandler(providerService)
 
-	// dispatchers — each loads active config from DB at send time
-	// smsDispatcher := sms.NewDispatcher(providerSvc)
-	// emailDispatcher := email.NewDispatcher(providerSvc)
-	// pushDispatcher := push.NewDispatcher(providerSvc)
+	// dispatchers
+	smsDispatcher := sms.NewDispatcher(providerService)
+	emailDispatcher := email.NewDispatcher(providerService)
+	pushDispatcher := push.NewDispatcher(providerService)
 
-	// notification service gets all three
-	// notifService := notification.NewNotificationService(notifRepo, smsDispatcher, emailDispatcher, pushDispatcher)
+	// notification
+	notifRepo := notification.NewNotificationRepository(db)
+	notifService := notification.NewNotificationService(notifRepo, map[notification.Channel]notification.Dispatcher{
+		notification.ChannelSms:   smsDispatcher,
+		notification.ChannelEmail: emailDispatcher,
+		notification.ChannelPush:  pushDispatcher,
+	})
+	notifHandler := rest_handler.NewNotificationHandler(notifService)
 
 	r := router.Setup(
 		healthHandler,
