@@ -1,27 +1,25 @@
 SHELL    := /bin/bash
-MIGRATE  := $(shell go env GOPATH)/bin/migrate
 GOLANGCI := $(shell go env GOPATH)/bin/golangci-lint
-BINARY   := bin/server
 
-ifneq (,$(wildcard .env))
-    include .env
-    export
-endif
-
-DB_URL=mysql://$(DB_USER):$(DB_PASS)@tcp($(DB_HOST):$(DB_PORT))/$(DB_NAME)
-
-.PHONY: run build clean \
+.PHONY: run run-consumer build build-consumer clean \
         lint lint-fix fmt fmt-check \
         test test-v \
+        docker-up docker-down docker-logs docker-build
 
 # ── Development ───────────────────────────────────────────────────
 
 run:
 	go run ./cmd/server/...
 
+run-consumer:
+	go run ./cmd/consumer/...
+
 build:
-	CGO_ENABLED=0 go build -ldflags="-s -w" \
-		-o $(BINARY) ./cmd/server/...
+	CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/server ./cmd/server/...
+
+build-consumer:
+	CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/consumer ./cmd/consumer/...
+
 clean:
 	rm -rf bin/
 
@@ -46,3 +44,26 @@ test:
 
 test-v:
 	go test ./... -v
+
+# ── Docker ────────────────────────────────────────────────────────
+
+docker-build:
+	docker compose build
+
+docker-up:
+	docker compose up -d
+
+docker-down:
+	docker compose down
+
+docker-down-v:
+	docker compose down -v
+
+docker-logs:
+	docker compose logs -f
+
+docker-logs-server:
+	docker compose logs -f server
+
+docker-logs-consumer:
+	docker compose logs -f consumer

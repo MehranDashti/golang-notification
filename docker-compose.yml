@@ -1,0 +1,138 @@
+services:
+
+  # ── API Server ──────────────────────────────────────────────────
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: notification-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://mongo_user:mongo_pass@mongodb:27017/golang_notification?authSource=golang_notification
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - notification-net
+
+  # ── Kafka Consumer / Worker ─────────────────────────────────────
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: notification-consumer
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_URI: mongodb://mongo_user:mongo_pass@mongodb:27017/golang_notification?authSource=golang_notification
+      REDIS_ADDR: redis:6379
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_GROUP_ID: notification-workers
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - notification-net
+
+  # ── MongoDB ─────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: notification-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpass
+      MONGO_INITDB_DATABASE: golang_notification
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification-net
+
+  # ── Redis ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: notification-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - notification-net
+
+  # ── Zookeeper (required by Kafka) ───────────────────────────────
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: notification-zookeeper
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    networks:
+      - notification-net
+
+  # ── Kafka ───────────────────────────────────────────────────────
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: notification-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    networks:
+      - notification-net
+
+volumes:
+  mongodb_data:
+  redis_data:
+  zookeeper_data:
+  kafka_data:
+
+networks:
+  notification-net:
+    driver: bridge
