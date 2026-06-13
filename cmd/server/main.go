@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -14,9 +15,7 @@ import (
 	"notification/internal/domain/notification"
 	providerDomain "notification/internal/domain/provider"
 	rest_handler "notification/internal/handler/rest"
-	"notification/internal/provider/email"
-	"notification/internal/provider/push"
-	"notification/internal/provider/sms"
+	"notification/internal/kafka"
 	"notification/internal/router"
 	"notification/pkg/logger"
 )
@@ -33,6 +32,10 @@ func main() {
 	database.Migrate(mongoClient, cfg.MongoDatabase)
 	db := mongoClient.Database(cfg.MongoDatabase)
 
+	producer := kafka.NewProducer(kafka.ProducerConfig{
+		Brokers: strings.Split(cfg.KafkaBrokers, ","),
+	})
+
 	// Health
 	healthHandler := rest_handler.NewHealthHandler(mongoClient)
 
@@ -42,17 +45,13 @@ func main() {
 	providerHandler := rest_handler.NewProviderHandler(providerService)
 
 	// dispatchers
-	smsDispatcher := sms.NewDispatcher(providerService)
-	emailDispatcher := email.NewDispatcher(providerService)
-	pushDispatcher := push.NewDispatcher(providerService)
+	// smsDispatcher := sms.NewDispatcher(providerService)
+	// emailDispatcher := email.NewDispatcher(providerService)
+	// pushDispatcher := push.NewDispatcher(providerService)
 
 	// notification
 	notifRepo := notification.NewNotificationRepository(db)
-	notifService := notification.NewNotificationService(notifRepo, map[notification.Channel]notification.Dispatcher{
-		notification.ChannelSms:   smsDispatcher,
-		notification.ChannelEmail: emailDispatcher,
-		notification.ChannelPush:  pushDispatcher,
-	})
+	notifService := notification.NewNotificationService(notifRepo, producer)
 	notifHandler := rest_handler.NewNotificationHandler(notifService)
 
 	r := router.Setup(
@@ -87,4 +86,10 @@ func main() {
 	if err := mongoClient.Disconnect(ctx); err != nil {
 		slog.Error("failed to disconnect mongodb", "error", err)
 	}
+	// shutdown
+	defer func() {
+		if err := producer.Close(); err != nil {
+			slog.Error("failed to close kafka producer", "error", err)
+		}
+	}()
 }
