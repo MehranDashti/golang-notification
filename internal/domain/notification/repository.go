@@ -23,12 +23,12 @@ func NewNotificationRepository(db *mongo.Database) *NotificationRepository {
 	}
 }
 
-func (r *NotificationRepository) UpdateStatus(ctx context.Context, id string, status Status, errMsg string) error {
+func (r *NotificationRepository) UpdateStatus(ctx context.Context, id string, status string, errMsg string) error {
 	fields := bson.M{
 		"status": status,
 		"error":  errMsg,
 	}
-	if status == StatusSent {
+	if status == string(StatusSent) {
 		now := time.Now()
 		fields["sent_at"] = now
 	}
